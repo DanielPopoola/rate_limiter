@@ -1,4 +1,4 @@
-from base import RateLimitStorage
+from .base import RateLimitStorage
 from typing import Optional, Tuple
 import time
 

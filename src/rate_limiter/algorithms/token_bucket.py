@@ -1,4 +1,4 @@
-from storage.base import RateLimitStorage
+from ..storage.base import RateLimitStorage
 
 class TokenBucket:
     def __init__(self, capacity, refill_rate, refill_time, storage: RateLimitStorage):

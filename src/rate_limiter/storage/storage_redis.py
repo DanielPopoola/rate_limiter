@@ -10,7 +10,7 @@ class RedisStorage(RateLimitStorage):
     
     def __init__(self, redis_client: redis.Redis, key_prefix: str = "rate_limit:"):
         if redis_client is None:
-            redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_response=True)
+            redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
         self.redis  = redis_client
         self.key_prefix = key_prefix

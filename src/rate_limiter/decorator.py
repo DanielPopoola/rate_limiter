@@ -1,8 +1,8 @@
 from functools import wraps
 from typing import Optional, Callable, Union
 from fastapi import Request, HTTPException
-from algorithms.token_bucket import TokenBucket, parse_rate_limit_string
-from storage.factory import StorageFactory
+from .algorithms.token_bucket import TokenBucket, parse_rate_limit_string
+from .storage.factory import StorageFactory
 import asyncio
 
 
