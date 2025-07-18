@@ -34,3 +34,27 @@ class TokenBucket:
 
         self._refill(key)
         return self.buckets[key]
+    
+
+def parse_rate_limit_string(rate_string):
+    if '/' not in rate_string:
+        raise ValueError("Rate limit string must be in 'N/period' format")
+    
+    requests, period = rate_string.split('/')
+    requests = int(requests)
+
+    period_map = {
+        'second': 1,
+        'minute': 60,
+        'hour': 3600,
+        'day': 86400
+    }
+
+    if period not in period_map:
+        raise ValueError(f"Unsupported period: {period}. Use : {list(period_map.keys())}")
+    
+    refill_time = period_map[period]
+    capacity = requests
+    refill_rate = requests
+
+    return capacity, refill_rate, refill_time
