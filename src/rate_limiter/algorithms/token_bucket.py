@@ -1,39 +1,45 @@
-from datetime import datetime
+from storage.base import RateLimitStorage
 
 class TokenBucket:
-    def __init__(self, capacity, refill_rate, refill_time):
+    def __init__(self, capacity, refill_rate, refill_time, storage: RateLimitStorage):
         self.capacity = capacity
         self.refill_rate = refill_rate
         self.refill_time = refill_time
-        self.buckets = {}
+        self.storage = storage
 
-    def _refill(self, key):
-        tokens, last_time = self.buckets[key]
-        now = datetime.now()
-        elapsed = (now - last_time).total_seconds()
-        added_tokens = (elapsed / self.refill_time) * self.refill_rate
-        tokens = min(self.capacity, tokens + added_tokens)
+    def allow_request(self, key: str) -> bool:
+        """
+        Check if a request should be allowed for the given key.
         
-        self.buckets[key] = (tokens, now)
+        This method delegates to the storage backend's atomic_consume_token method,
+        which handles all the complexity of refilling tokens and consuming them atomically.
+        """
+        return self.storage.atomic_consume_token(key, self.capacity, self.refill_rate, self.refill_time)
+    
+    def get_bucket_info(self, key: str) -> dict:
+        """
+        Get information about a bucket's current state.
+        Useful for debugging and monitoring.
+        """
+        state = self.storage.get_bucket_state(key)
 
-    def _allow_request(self, key):
-        if key not in self.buckets:
-            self.buckets[key] = (self.capacity, datetime.now())
-
-        self._refill(key)
-        token, last_time = self.buckets[key]
-
-        if token >= 1:
-            self.buckets[key] = (token - 1, last_time)
-            return True
-        return False
-
-    def get_token_info(self, key):
-        if key not in self.buckets:
-            self.buckets[key] = (self.capacity, datetime.now())
-
-        self._refill(key)
-        return self.buckets[key]
+        if state is None:
+            return {
+                'tokens': self.capacity,
+                'capacity': self.capacity,
+                'refill_rate': self.refill_rate,
+                'refill_time': self.refill_time,
+                'last_refill': None
+            }
+        
+        tokens, last_time = state
+        return {
+            'tokens': tokens,
+            'capacity': self.capacity,
+            'refill_rate': self.refill_rate,
+            'refill_time': self.refill_time,
+            'last_refill': last_time
+        }
     
 
 def parse_rate_limit_string(rate_string):
@@ -58,3 +64,5 @@ def parse_rate_limit_string(rate_string):
     refill_rate = requests
 
     return capacity, refill_rate, refill_time
+
+

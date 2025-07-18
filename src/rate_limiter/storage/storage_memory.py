@@ -11,10 +11,10 @@ class MemoryStorage(RateLimitStorage):
     def get_bucket_state(self, key: str) -> Optional[Tuple[float, float]]:
         return self.buckets.get(key)
     
-    def set_bucket_state(self, key: str, tokens: int | float, timestamp: float) -> None:
+    def set_bucket_state(self, key: str, tokens: float, timestamp: float) -> None:
         self.buckets[key] = (tokens, timestamp)
 
-    def atomic_consume_token(self, key: str, capacity: int | float, refill_rate: int | float, refill_time: float) -> bool:
+    def atomic_consume_token(self, key: str, capacity: float, refill_rate: float, refill_time: float) -> bool:
         """
         Note: This is NOT truly atomic for concurrent access,
         but works fine for single-threaded scenarios.

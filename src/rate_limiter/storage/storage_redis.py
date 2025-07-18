@@ -1,12 +1,11 @@
 from .base import RateLimitStorage
 from typing import Tuple, Optional
-from datetime import datetime
 import json
 import redis
 import time
 
 
-class RedisLimitStorage(RateLimitStorage):
+class RedisStorage(RateLimitStorage):
     """Redis-based storage backend with atomic operations"""
     
     def __init__(self, redis_client: redis.Redis, key_prefix: str = "rate_limit:"):
@@ -22,7 +21,7 @@ class RedisLimitStorage(RateLimitStorage):
         """Create a Redis key with our prefix"""
         return f"{self.key_prefix}{key}"
     
-    def get_bucket_state(self, key: str) -> Optional[Tuple[int | float, float]]:
+    def get_bucket_state(self, key: str) -> Optional[Tuple[float, float]]:
         redis_key = self._make_key(key)
         data = self.redis.get(redis_key)
 
@@ -37,15 +36,13 @@ class RedisLimitStorage(RateLimitStorage):
         except (json.JSONDecodeError, KeyError):
             return None
         
-    def set_bucket_state(self, key: str, tokens: int | float, timestamp: float) -> None:
+    def set_bucket_state(self, key: str, tokens:float, timestamp: float) -> None:
         redis_key = self._make_key(key)
         data = {
             'tokens': tokens,
             'timestamp': timestamp
         }
-        # Set with expiration to prevent memory leaks
-        # Expire after 2x the refill time to handle edge cases
-        self.redis.setex(redis_key, 7200, json.dumps(data))  # 2 hours default
+        self.redis.setex(redis_key, 7200, json.dumps(data))
     
     def atomic_consume_token(self, key: str, capacity: float, refill_rate: float, refill_time: float) -> bool:
         """

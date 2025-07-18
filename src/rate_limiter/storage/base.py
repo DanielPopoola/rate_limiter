@@ -6,7 +6,7 @@ class RateLimitStorage(ABC):
     """Abstract base class for rate limit storage backends"""
 
     @abstractmethod
-    def get_bucket_state(self, key: str) -> Optional[Tuple[int | float, float]]:
+    def get_bucket_state(self, key: str) -> Optional[Tuple[float, float]]:
         """
         Get the current state of a token bucket.
 
@@ -19,10 +19,10 @@ class RateLimitStorage(ABC):
         pass
 
     @abstractmethod
-    def set_bucket_state(self, key: str, tokens: int | float, timestamp: float) -> None:
+    def set_bucket_state(self, key: str, tokens: float, timestamp: float) -> None:
         """
         Set the state of a token bucket.
-        
+
         Args:
             key: The user/bucket identifier
             tokens: Current token count
@@ -31,7 +31,7 @@ class RateLimitStorage(ABC):
         pass
 
     @abstractmethod
-    def atomic_consume_token(self, key: str, capacity: int | float, refill_rate: int | float, refill_time: float) -> bool:
+    def atomic_consume_token(self, key: str, capacity: float, refill_rate: float, refill_time: float) -> bool:
         """
         Atomically check if a token can be consumed and consume it if possible.
         This is the critical method that prevents race conditions.
