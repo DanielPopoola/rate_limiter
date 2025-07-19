@@ -1,6 +1,7 @@
 from .base import RateLimitStorage
 from .storage_memory import MemoryStorage
 from .storage_redis import RedisStorage
+import redis
 
 
 class StorageFactory:
@@ -21,6 +22,14 @@ class StorageFactory:
         if storage_type == "memory":
             return MemoryStorage()
         elif storage_type == "redis":
-            return RedisStorage(**kwargs)
+            # Extract Redis-specific connection parameters
+            host = kwargs.pop("host", "localhost")
+            port = kwargs.pop("port", 6379)
+            db = kwargs.pop("db", 0)
+            key_prefix = kwargs.pop("key_prefix", "rate_limit:")
+
+            # Create Redis client
+            redis_client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+            return RedisStorage(redis_client=redis_client, key_prefix=key_prefix)
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")
